@@ -1,0 +1,5 @@
+*.swp
+*.swo
+house
+save_csv
+temperature.csv
