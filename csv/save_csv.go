@@ -55,7 +55,7 @@ func main() {
 		record[1] = fmt.Sprintf("%f", tmpStruct.Temperature)
 		writer.Write(record[:])
 		writer.Flush()
-		fmt.Println(tmpStruct)
+		//fmt.Println(tmpStruct)
 
 	}
 }
