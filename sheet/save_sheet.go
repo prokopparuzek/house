@@ -15,12 +15,12 @@ type data struct {
 	Temperature float64 `json:"temperature"`
 }
 
-const Subject = "rpi2"
+const Subject = "rpi3"
 const MIME = "application/x-www-form-urlencoded"
 
 func main() {
 	// Připojení do gnatsd
-	conn, err := nats.Connect("nats://rpi2:4222")
+	conn, err := nats.Connect("nats://rpi3:4222")
 	if err != nil {
 		log.Fatal(err)
 	}
