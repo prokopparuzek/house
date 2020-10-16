@@ -11,8 +11,12 @@ import (
 )
 
 type data struct {
-	Time        string  `json:"time"`
 	Temperature float64 `json:"temperature"`
+}
+
+type payload struct {
+	Time string `json:"time"`
+	Data data   `json:"data"`
 }
 
 const Subject = "rpi3"
@@ -47,12 +51,12 @@ func main() {
 	econn.BindRecvChan(Subject, channel)
 	fmt.Println("Channel created!")
 	for {
-		var tmpStruct data
+		var tmpStruct payload
 		var record [2]string
 		msg := <-channel
 		json.Unmarshal([]byte(msg), &tmpStruct)
 		record[0] = tmpStruct.Time
-		record[1] = fmt.Sprintf("%f", tmpStruct.Temperature)
+		record[1] = fmt.Sprintf("%f", tmpStruct.Data.Temperature)
 		writer.Write(record[:])
 		writer.Flush()
 		//fmt.Println(tmpStruct)
