@@ -12,7 +12,10 @@ if __name__ == "__main__":
         data = loads(jsonData)
         parseTime = data['time'].split()
         day = db.collection('room1').document(parseTime[0])
-        day.set({parseTime[1]: {'temperature': data['temperature']}}, merge=True)
+        actual = db.collection('room1').document('now')
+        dataDict = {parseTime[1]: {'temperature': data['temperature']}}
+        day.set(dataDict, merge=True)
+        actual.set(dataDict)
         print(data)
 
     with NATSClient("nats://rpi3:4222") as ns:
