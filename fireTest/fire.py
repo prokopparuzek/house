@@ -13,20 +13,14 @@ if __name__ == "__main__":
         jsonData = msg.payload.decode("utf-8")
         data = loads(jsonData)
         parseTime = data['time'].split('T')
-        day = db.collection(parseTime[0]).document(parseTime[1])
-        actual = db.collection('now').document('current')
-        day.set(data['data'],)
+        day = db.collection('room').document(parseTime[0])
+        actual = db.collection('room').document('now')
+        day.set({parseTime[1]: data['data']}, merge=True)
         actual.set(data['data'])
         print(data)
 
 
-def main():
-    try:
-        with NATSClient("nats://rpi3:4222") as ns:
-            sub = ns.subscribe("rpi3", callback=fireData)
-            ns.wait()
-    except:
-        main()
-
 if __name__ == "__main__":
-    main()
+    with NATSClient("nats://rpi3:4222") as ns:
+        sub = ns.subscribe("rpi3", callback=fireData)
+        ns.wait()
