@@ -17,6 +17,10 @@ if __name__ == "__main__":
         actual = db.collection('room').document('now')
         day.set({parseTime[1]: data['data']}, merge=True)
         actual.set(data['data'])
+        try:
+            day.get('timestamp')
+        except KeyError:
+            day.set({'timestamp': int(time.mktime(time.localtime()))})
         print(data)
 
 
