@@ -21,7 +21,8 @@ if __name__ == "__main__":
         try:
             check.get('timestamp')
         except KeyError:
-            day.set({'timestamp': int(time.mktime(time.localtime()))})
+            day.set({'timestamp': int(time.mktime(time.localtime()))},
+                    merge=True)
 
 
 if __name__ == "__main__":
