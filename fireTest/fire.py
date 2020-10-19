@@ -3,7 +3,7 @@ from firebase_admin import firestore
 from pynats import NATSClient, NATSMessage
 from pynats.exceptions import NATSReadSocketError
 from json import loads
-from time import sleep
+import time
 
 if __name__ == "__main__":
     fireApp = firebase_admin.initialize_app()
@@ -17,11 +17,11 @@ if __name__ == "__main__":
         actual = db.collection('room').document('now')
         day.set({parseTime[1]: data['data']}, merge=True)
         actual.set(data['data'])
+        check = day.get()
         try:
-            day.get('timestamp')
+            check.get('timestamp')
         except KeyError:
             day.set({'timestamp': int(time.mktime(time.localtime()))})
-        print(data)
 
 
 if __name__ == "__main__":
