@@ -18,12 +18,18 @@ var client *firestore.Client
 var ctx context.Context
 
 func STANConnect(_ stan.Conn, _ error) {
-	time.Sleep(3 * time.Second)
-	sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
-	if err != nil {
-		log.Panicln(err)
+	for true {
+		time.Sleep(3 * time.Second)
+		sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
+		if err == stan.ErrBadConnection {
+			continue
+		} else if err != nil {
+			log.Panicln(err)
+		} else {
+			scon = sc
+			break
+		}
 	}
-	scon = sc
 }
 
 func handleMsg(msg *stan.Msg) {
