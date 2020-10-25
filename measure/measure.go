@@ -4,12 +4,12 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
 	stan "github.com/nats-io/stan.go"
 	cron "github.com/rk/go-cron"
+	log "github.com/sirupsen/logrus"
 )
 
 type message struct {
@@ -29,8 +29,10 @@ func getTemperature() float64 {
 		log.Panicln(err)
 	}
 	defer file.Close()
+	log.WithField("file", device).Debug("Open file")
 	var temperature float64
-	fmt.Fscan(file, &temperature)
+	count, err := fmt.Fscan(file, &temperature)
+	log.Debug(temperature, count, err)
 	return temperature / 1000
 }
 
@@ -40,6 +42,7 @@ func csvSave(msg *message) {
 		log.Panicln(err)
 	}
 	defer f.Close()
+	log.WithField("file", csvFile).Debug("Open file")
 	writer := csv.NewWriter(f)
 	writer.Write([]string{fmt.Sprint(msg.Timestamp), fmt.Sprint(msg.Temperature)})
 	writer.Flush()
@@ -47,7 +50,7 @@ func csvSave(msg *message) {
 	if err != nil {
 		log.Panicln(err)
 	}
-
+	log.Debug("Stored csv")
 }
 
 func sendMeasures(_ time.Time) {
@@ -55,8 +58,10 @@ func sendMeasures(_ time.Time) {
 	var Jmsg []byte
 	var err error
 	var max int = 0
+	var messageLoger *log.Entry = log.WithField("message", msg)
 	msg.Temperature = getTemperature()
 	msg.Timestamp = time.Now().Unix()
+	messageLoger.Debug("Measure")
 	//CSV
 	csvSave(&msg)
 	// NATS
@@ -64,13 +69,15 @@ func sendMeasures(_ time.Time) {
 	for max = 0; max < 100; max++ {
 		err = scon.Publish(subject, Jmsg)
 		if err != nil {
+			messageLoger.Trace("Error, will retry")
 			time.Sleep(5 * time.Second)
 		} else {
+			messageLoger.Debug("Deliver")
 			break
 		}
 	}
 	if max >= 100 {
-		log.Printf("Can't deliver %d\n", msg.Timestamp)
+		messageLoger.Error("Cannot deliver")
 	}
 }
 
@@ -79,21 +86,27 @@ func STANConnect(_ stan.Conn, _ error) {
 		time.Sleep(3 * time.Second)
 		sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
 		if err == stan.ErrBadConnection {
+			log.Debug("Retrying")
 			continue
 		} else if err != nil {
-			log.Panicln(err)
+			log.Panic(err)
 		} else {
 			scon = sc
+			log.Debug("Connect")
 			break
 		}
 	}
 }
 
 func main() {
+	// logrus
+	log.SetOutput(os.Stderr)
+	log.SetReportCaller(true)
+	log.SetLevel(log.DebugLevel)
 	forever := make(chan bool)
 	STANConnect(nil, nil)
 	defer scon.Close()
-	log.Println("Connected")
+	log.Debug("Connected-defer")
 	// Cron
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 00, 10, sendMeasures)
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 05, 10, sendMeasures)
@@ -107,5 +120,6 @@ func main() {
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 45, 10, sendMeasures)
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 50, 10, sendMeasures)
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 55, 10, sendMeasures)
+	log.Debug("Set CRON")
 	<-forever
 }
