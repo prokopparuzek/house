@@ -64,7 +64,7 @@ func sendMeasures(_ time.Time) {
 	for max = 0; max < 100; max++ {
 		err = scon.Publish(subject, Jmsg)
 		if err != nil {
-			time.Sleep(3 * time.Second)
+			time.Sleep(5 * time.Second)
 		} else {
 			break
 		}
@@ -75,12 +75,18 @@ func sendMeasures(_ time.Time) {
 }
 
 func STANConnect(_ stan.Conn, _ error) {
-	time.Sleep(3 * time.Second)
-	sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
-	if err != nil {
-		log.Panicln(err)
+	for true {
+		time.Sleep(3 * time.Second)
+		sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
+		if err == stan.ErrBadConnection {
+			continue
+		} else if err != nil {
+			log.Panicln(err)
+		} else {
+			scon = sc
+			break
+		}
 	}
-	scon = sc
 }
 
 func main() {
