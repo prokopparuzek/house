@@ -101,6 +101,7 @@ func main() {
 		log.Panic(err)
 	}
 	defer sc.Close()
+	scon = sc
 	log.Debug("Connected")
 	// Cron
 	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 00, 10, sendMeasures)
