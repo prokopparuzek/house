@@ -67,17 +67,17 @@ func sendMeasures(_ time.Time) {
 	csvSave(&msg)
 	// NATS
 	Jmsg, _ = json.Marshal(msg)
-	for max = 0; max < 100; max++ {
+	for max = 0; max < 120; max++ {
 		err = scon.Publish(subject, Jmsg)
 		if err != nil {
 			messageLoger.Trace("Error, will retry")
-			time.Sleep(5 * time.Second)
+			time.Sleep(60 * time.Second)
 		} else {
 			messageLoger.Debug("Deliver")
 			break
 		}
 	}
-	if max >= 100 {
+	if max >= 120 {
 		messageLoger.Error("Cannot deliver")
 	}
 }
