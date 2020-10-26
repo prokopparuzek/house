@@ -27,8 +27,10 @@ func handleMsg(msg *stan.Msg) {
 	_, _, err := ref.Add(ctx, payload)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 	log.Debug("Fired")
+	msg.Ack()
 }
 
 func main() {
@@ -63,7 +65,7 @@ func main() {
 	}
 	defer client.Close()
 	log.Debug("Connected to firestore")
-	_, err = sc.Subscribe(subject, handleMsg, stan.DurableName("1"), stan.DeliverAllAvailable())
+	_, err = sc.Subscribe(subject, handleMsg, stan.DurableName("1"), stan.DeliverAllAvailable(), stan.MaxInflight(3), stan.SetManualAckMode())
 	if err != nil {
 		log.Error(err)
 	}
