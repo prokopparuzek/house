@@ -13,6 +13,7 @@ import (
 )
 
 const subject = "room"
+const logFile = "/var/log/fire.log"
 
 var scon stan.Conn
 var client *firestore.Client
@@ -52,6 +53,13 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetReportCaller(true)
 	log.SetLevel(log.ErrorLevel)
+	log.SetFormatter(&log.JSONFormatter{})
+	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
+	if err != nil {
+		log.WithField("file", logFile).Error(err)
+	} else {
+		log.SetOutput(f)
+	}
 	forever := make(chan bool)
 	STANConnect(nil, nil)
 	defer scon.Close()
