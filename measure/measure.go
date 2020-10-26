@@ -82,23 +82,6 @@ func sendMeasures(_ time.Time) {
 	}
 }
 
-func STANConnect(_ stan.Conn, _ error) {
-	for true {
-		time.Sleep(3 * time.Second)
-		sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
-		if err == stan.ErrBadConnection {
-			log.Debug("Retrying")
-			continue
-		} else if err != nil {
-			log.Panic(err)
-		} else {
-			scon = sc
-			log.Debug("Connect")
-			break
-		}
-	}
-}
-
 func main() {
 	// logrus
 	log.SetOutput(os.Stderr)
@@ -112,23 +95,27 @@ func main() {
 		log.SetOutput(f)
 	}
 	forever := make(chan bool)
-	STANConnect(nil, nil)
-	defer scon.Close()
-	log.Debug("Connected-defer")
+	time.Sleep(3 * time.Second)
+	sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
+	if err != nil {
+		log.Panic(err)
+	}
+	defer sc.Close()
+	log.Debug("Connected")
 	// Cron
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 00, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 05, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 10, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 15, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 20, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 25, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 30, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 35, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 40, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 45, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 50, 10, sendMeasures)
-	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 55, 10, sendMeasures)
-	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, cron.ANY, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 00, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 05, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 10, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 15, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 20, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 25, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 30, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 35, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 40, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 45, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 50, 10, sendMeasures)
+	cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, 55, 10, sendMeasures)
+	//cron.NewCronJob(cron.ANY, cron.ANY, cron.ANY, cron.ANY, cron.ANY, 10, sendMeasures)
 	log.Debug("Set CRON")
 	<-forever
 }

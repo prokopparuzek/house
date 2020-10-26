@@ -15,26 +15,8 @@ import (
 const subject = "room"
 const logFile = "/var/log/fire.log"
 
-var scon stan.Conn
 var client *firestore.Client
 var ctx context.Context
-
-func STANConnect(_ stan.Conn, _ error) {
-	for true {
-		time.Sleep(3 * time.Second)
-		sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.SetConnectionLostHandler(STANConnect))
-		if err == stan.ErrBadConnection {
-			log.Debug("Will retry")
-			continue
-		} else if err != nil {
-			log.Panicln(err)
-		} else {
-			log.Debug("Connect")
-			scon = sc
-			break
-		}
-	}
-}
 
 func handleMsg(msg *stan.Msg) {
 	var payload map[string]interface{}
@@ -52,7 +34,7 @@ func handleMsg(msg *stan.Msg) {
 func main() {
 	log.SetOutput(os.Stderr)
 	log.SetReportCaller(true)
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.JSONFormatter{})
 	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
 	if err != nil {
@@ -61,9 +43,13 @@ func main() {
 		log.SetOutput(f)
 	}
 	forever := make(chan bool)
-	STANConnect(nil, nil)
-	defer scon.Close()
-	log.Debug("Connect-defer")
+	time.Sleep(3 * time.Second) // delay tpo start server
+	sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
+	if err != nil {
+		log.Panic(err)
+	}
+	defer sc.Close()
+	log.Debug("Connected")
 	// firebase
 	ctx = context.Background()
 	app, err := firebase.NewApp(ctx, nil)
@@ -77,7 +63,7 @@ func main() {
 	}
 	defer client.Close()
 	log.Debug("Connected to firestore")
-	_, err = scon.Subscribe(subject, handleMsg, stan.DurableName("1"), stan.DeliverAllAvailable())
+	_, err = sc.Subscribe(subject, handleMsg, stan.DurableName("1"), stan.DeliverAllAvailable())
 	if err != nil {
 		log.Error(err)
 	}
