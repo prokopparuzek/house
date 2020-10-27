@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -32,8 +33,19 @@ func getTemperature() float64 {
 	defer file.Close()
 	log.WithField("file", device).Debug("Open file")
 	var temperature float64
-	count, err := fmt.Fscan(file, &temperature)
-	log.Debug(temperature, count, err)
+	for true {
+		count, err := fmt.Fscan(file, &temperature)
+		if err == io.EOF {
+			log.Debug("Retry read")
+			continue
+		} else if err != nil {
+			log.Error(err)
+			break
+		} else {
+			log.Debug(temperature, count, err)
+			break
+		}
+	}
 	return temperature / 1000
 }
 
