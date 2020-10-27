@@ -36,7 +36,7 @@ func handleMsg(msg *stan.Msg) {
 func main() {
 	log.SetOutput(os.Stderr)
 	log.SetReportCaller(true)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.ErrorLevel)
 	log.SetFormatter(&log.JSONFormatter{})
 	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0664)
 	if err != nil {
