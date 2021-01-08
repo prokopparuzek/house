@@ -107,7 +107,7 @@ func main() {
 		log.SetOutput(f)
 	}
 	forever := make(chan bool)
-	time.Sleep(3 * time.Second)
+	time.Sleep(10 * time.Second)
 	sc, err := stan.Connect("measures", "rpi3", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
 	if err != nil {
 		log.Panic(err)

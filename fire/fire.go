@@ -45,7 +45,7 @@ func main() {
 		log.SetOutput(f)
 	}
 	forever := make(chan bool)
-	time.Sleep(3 * time.Second) // wait fo server to start
+	time.Sleep(30 * time.Second) // wait fo server to start
 	sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
 	if err != nil {
 		log.Panic(err)
