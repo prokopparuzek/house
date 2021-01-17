@@ -26,9 +26,16 @@ const subject = "room"
 var scon stan.Conn
 
 func getTemperature() float64 {
-	file, err := os.Open(device)
-	if err != nil {
-		log.Panicln(err)
+	var file *os.File
+	var err error
+	for {
+		file, err = os.Open(device)
+		if err != nil {
+			log.Error(err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+		break
 	}
 	defer file.Close()
 	log.WithField("file", device).Debug("Open file")
