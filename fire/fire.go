@@ -45,10 +45,15 @@ func main() {
 		log.SetOutput(f)
 	}
 	forever := make(chan bool)
-	time.Sleep(30 * time.Second) // wait fo server to start
-	sc, err := stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
-	if err != nil {
-		log.Panic(err)
+	var sc stan.Conn
+	for {
+		sc, err = stan.Connect("measures", "gun", stan.NatsURL("nats://rpi3:4222"), stan.Pings(60, 1440))
+		if err != nil {
+			log.Error(err)
+			time.Sleep(time.Second * 30)
+			continue
+		}
+		break
 	}
 	defer sc.Close()
 	log.Debug("Connected")
